@@ -79,3 +79,4 @@ Assets/EnvKey.*
 
 /Assets/Resources/CCAnimation/
 /Assets/Resources/CCAnimation/*.meta
+.fake
