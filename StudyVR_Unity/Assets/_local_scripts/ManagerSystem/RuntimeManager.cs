@@ -25,4 +25,6 @@ public class RuntimeManager : MonoBehaviour
 
     public UIManager UI_MANAGER;
 
+    public TutorialManager TUTORIAL_MANAGER;
+
 }

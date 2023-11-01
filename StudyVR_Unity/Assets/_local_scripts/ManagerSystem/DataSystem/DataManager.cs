@@ -6,6 +6,6 @@ public class DataManager : MonoBehaviour
 {
     public void OnConfigLoaded()
     {
-        RuntimeManager.Instance.UI_MANAGER.ConfigCanvas.LoadConfigsToDD();
+        RuntimeManager.Instance.UI_MANAGER.ConfigLayer.LoadConfigsToDD();
     }
 }

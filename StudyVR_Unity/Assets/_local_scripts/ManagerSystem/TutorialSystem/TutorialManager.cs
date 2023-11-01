@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class TutorialManager : MonoBehaviour
 {
@@ -366,13 +367,57 @@ public class TutorialManager : MonoBehaviour
 
     }
 
-    public void TutorialButtonOnClick()
+    public void TutorialButtonOnClick(Button button)
     {
         TutorialCounterUniversal += 1.0f;
+
+        if(button != null)
+        {
+            button.gameObject.SetActive(false);
+        }
     }
 
     public void RecenteredButtonOnClick()
     {
         TriggerStep5();
+    }
+
+
+    [ContextMenu("DebugNextStep")]
+    public void DebugNextStep()
+    {
+        switch (TutorialStep)
+        {
+            case 1:
+                TriggerStep2();
+                break;
+
+            case 2:
+                TriggerStep3();
+                break;
+
+            case 3:
+                TriggerStep4();
+                break;
+
+            case 4:
+                TriggerStep5();
+                break;
+
+            case 5:
+                TriggerStep6();
+                break;
+
+            case 6:
+                TriggerStep7();
+                break;
+
+            case 7:
+                TriggerStepEnd();
+                break;
+
+            default:
+                break;
+        }
     }
 }
