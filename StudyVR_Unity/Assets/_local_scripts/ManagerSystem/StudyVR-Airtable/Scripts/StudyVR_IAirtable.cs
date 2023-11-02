@@ -9,8 +9,10 @@ public class StudyVR_IAirtable : MonoBehaviour
     public static STUDYVR_RECORDS studyvr_config_records;
 
     [SerializeField] private string AIRTABLE_API_KEY;
+    public string AirtableAPIKey { get { return AIRTABLE_API_KEY; } }
 
     [SerializeField] private string GOOGLE_API_KEY;
+    public string GoogleAPIKey { get { return GOOGLE_API_KEY; } }
 
     public bool InitializeOnStart = true;
 
@@ -91,6 +93,8 @@ public class StudyVR_IAirtable : MonoBehaviour
                 Debug.Log("question link: " + record.fields.PreStudyLink);
                 Debug.Log("question link: " + record.fields.MainStudyLink);
                 Debug.Log("question as1: " + record.fields.AssetLink1);
+                if(record.fields.AssetLink2 == null) Debug.Log("question as2: null!!!!");
+                
                 Debug.Log("question as2: " + record.fields.AssetLink2);
                 Debug.Log("question comm: " + record.fields.Comments);
             }
@@ -110,4 +114,6 @@ public class StudyVR_IAirtable : MonoBehaviour
             StartCoroutine(InitializeBase());
         }
     }
+
+
 }

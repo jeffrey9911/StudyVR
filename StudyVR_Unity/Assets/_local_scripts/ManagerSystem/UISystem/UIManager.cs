@@ -17,7 +17,7 @@ public class UIManager : MonoBehaviour
     private void Start()
     {
         ConfigLayer.gameObject.SetActive(true);
-        //TutorialCanvas.SetActive(false);
+        TutorialLayer.gameObject.SetActive(false);
         UserLayer.gameObject.SetActive(false);
     }
 

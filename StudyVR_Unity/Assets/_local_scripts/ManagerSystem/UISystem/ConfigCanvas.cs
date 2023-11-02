@@ -13,8 +13,10 @@ public class ConfigCanvas : MonoBehaviour
     [SerializeField] private TMP_InputField QuestionnaireID;
 
     [SerializeField] private Toggle TutorialToggle;
+    public bool IsTutorial { get { return TutorialToggle.isOn; } }
 
     private int CurrentConfigIndex = 0;
+    public int GetRecordIndex { get { return CurrentConfigIndex; } }
 
     private void Start()
     {
@@ -67,9 +69,10 @@ public class ConfigCanvas : MonoBehaviour
         DebugText.text = message;
     }
 
+    [ContextMenu("StartOnClick")]
     public void StartOnClick()
     {
-        RuntimeManager.Instance.UI_MANAGER.StartUserCanvas(TutorialToggle.isOn);
+        RuntimeManager.Instance.DATA_MANAGER.StartPreload();    
     }
 
     public void PreviousConfigOnClick()
@@ -99,4 +102,6 @@ public class ConfigCanvas : MonoBehaviour
 
         LoadQuestionnaireInfo();
     }
+
+    
 }
