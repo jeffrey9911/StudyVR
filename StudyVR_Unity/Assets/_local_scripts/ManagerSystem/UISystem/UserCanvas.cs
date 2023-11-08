@@ -18,7 +18,7 @@ public class UserCanvas : MonoBehaviour
     private Vector3 RControllerPosRecord = new Vector3(0f, 0f, 0f);
     //private Quaternion ControllerRotRecord = new Quaternion(0f, 0f, 0f, 0f);
     private bool IsControllerPosRecorded = false;
-    private Vector3 FollowUIScale = new Vector3(0.0035f, 0.0035f, 0.0035f);
+    private Vector3 FollowUIScale = new Vector3(0.001075f, 0.001075f, 0.001075f);
     private bool isDisplayGUI = true;
 
     [SerializeField] private Transform LeftHandAnchor;
@@ -65,7 +65,7 @@ public class UserCanvas : MonoBehaviour
                     ScalePanel.SetActive(true);
 
                     float dDistance = Vector3.Distance(LeftHandAnchor.position, RightHandAnchor.position) - Vector3.Distance(LControllerPosRecord, RControllerPosRecord);
-                    dDistance *= 0.006f;
+                    dDistance *= 0.001f;
 
                     FollowUIScale += new Vector3(dDistance, dDistance, dDistance);
                 }
@@ -94,7 +94,7 @@ public class UserCanvas : MonoBehaviour
 
             user_canvas.transform.position = Vector3.Lerp(user_canvas.transform.position, FollowTransform.position, Time.deltaTime * FollowSpeed);
             user_canvas.transform.rotation = Quaternion.Lerp(user_canvas.transform.rotation, FollowTransform.rotation, Time.deltaTime * FollowSpeed);
-            user_canvas.transform.localScale = Vector3.Lerp(user_canvas.transform.localScale, FollowUIScale, Time.deltaTime * FollowSpeed * 0.1f);
+            user_canvas.transform.localScale = Vector3.Lerp(user_canvas.transform.localScale, FollowUIScale, Time.deltaTime * FollowSpeed * 2.0f);
         }
 
 

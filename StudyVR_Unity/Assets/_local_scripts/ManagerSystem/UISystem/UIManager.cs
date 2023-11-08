@@ -43,6 +43,8 @@ public class UIManager : MonoBehaviour
 
         ConfigLayer.gameObject.SetActive(false);
         UserLayer.gameObject.SetActive(true);
+
+        RuntimeManager.Instance.WEBVIEW_MANAGER.LoadPreStudyWebview();
     }
 
 }

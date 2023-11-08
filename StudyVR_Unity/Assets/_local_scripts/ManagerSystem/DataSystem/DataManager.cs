@@ -32,6 +32,15 @@ public class DataManager : MonoBehaviour
     private int CurrentPreloadCount = 0;
     public bool IsPreloaded = false;
 
+    public record_data LoadedRecord;
+
+    public void LoadRecordData(record_data rd)
+    {
+        LoadedRecord = rd;
+
+        StartPreload();
+    }
+
     public void StartPreload()
     {
         PendingLink1 = StudyVR_IAirtable.studyvr_config_records.records[RuntimeManager.Instance.UI_MANAGER.ConfigLayer.GetRecordIndex].fields.AssetLink1;

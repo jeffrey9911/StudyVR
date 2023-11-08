@@ -72,7 +72,7 @@ public class ConfigCanvas : MonoBehaviour
     [ContextMenu("StartOnClick")]
     public void StartOnClick()
     {
-        RuntimeManager.Instance.DATA_MANAGER.StartPreload();    
+        RuntimeManager.Instance.DATA_MANAGER.LoadRecordData(StudyVR_IAirtable.studyvr_config_records.records[CurrentConfigIndex]);
     }
 
     public void PreviousConfigOnClick()

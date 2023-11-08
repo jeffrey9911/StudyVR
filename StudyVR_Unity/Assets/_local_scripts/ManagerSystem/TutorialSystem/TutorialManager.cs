@@ -52,13 +52,6 @@ public class TutorialManager : MonoBehaviour
     private bool IsControllerPosRecorded = false;
     private Vector3 FollowUIScale = new Vector3(0.005f, 0.005f, 0.005f);
 
-    private void Start()
-    {
-        TutorialUICanvas.SetActive(false);
-        LeftHandUI.gameObject.SetActive(false);
-        RightHandUI.gameObject.SetActive(false);
-    }
-
     private void Update()
     {
         if (TutorialStep > 0)
@@ -282,6 +275,7 @@ public class TutorialManager : MonoBehaviour
     {
         TutorialStep = -1;
         SwitchOff();
+        RuntimeManager.Instance.UI_MANAGER.StartUserCanvas(false);
         TutorialUICanvas.SetActive(false);
     }
 

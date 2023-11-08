@@ -15,6 +15,7 @@ namespace TLab.Android.WebView
 
 		[SerializeField] private RawImage m_rawImage;
 		[SerializeField] private string m_url = "https://youtube.com";
+		public void SetUrl(string url) => m_url = url;
 
 		[Header("File Download Settings")]
 		[SerializeField] private DownloadOption m_dlOption;
