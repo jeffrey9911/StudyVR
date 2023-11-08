@@ -11,11 +11,18 @@ public class PreloadObject
     public string ObjectLink;
     public GameObject ObjectInstance;
 
-    public PreloadObject(string rid, GameObject gobj)
+    public PreloadObject(string olink, GameObject gobj)
     {
-        ObjectLink = rid;
+        ObjectLink = olink;
         ObjectInstance = gobj;
     }
+}
+
+public enum StudyType
+{
+    Noset,
+    Evualuation,
+    Comparison
 }
 
 public class DataManager : MonoBehaviour
@@ -33,12 +40,26 @@ public class DataManager : MonoBehaviour
     public bool IsPreloaded = false;
 
     public record_data LoadedRecord;
+    public StudyType CurrentStudyType = StudyType.Noset;
 
     public void LoadRecordData(record_data rd)
     {
         LoadedRecord = rd;
 
         StartPreload();
+    }
+
+    public GameObject GetPreloadedObject(string olink)
+    {
+        foreach(PreloadObject preloadObject in PreloadObjects)
+        {
+            if(preloadObject.ObjectLink == olink)
+            {
+                return preloadObject.ObjectInstance;
+            }
+        }
+
+        return null;
     }
 
     public void StartPreload()
@@ -68,10 +89,12 @@ public class DataManager : MonoBehaviour
         }
         else if(!isAsset2Loaded)
         {
+            CurrentStudyType = StudyType.Comparison;
             CurrentPreloadCount = 2;
         }
         else
         {
+            CurrentStudyType = StudyType.Evualuation;
             CurrentPreloadCount = 1;
         }
 

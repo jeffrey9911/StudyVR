@@ -27,4 +27,6 @@ public class RuntimeManager : MonoBehaviour
 
     public WebViewManager WEBVIEW_MANAGER;
 
+    public ObjectManager OBJECT_MANAGER;
+
 }
