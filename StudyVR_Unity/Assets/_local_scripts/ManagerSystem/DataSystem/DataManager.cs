@@ -1,7 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Text.RegularExpressions;
+using System.Xml;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -76,10 +79,16 @@ public class DataManager : MonoBehaviour
             {
                 isAsset1Loaded = true;
             }
-            if (preloadObject.ObjectLink == PendingLink2 || PendingLink2 == null)
+
+            if (preloadObject.ObjectLink == PendingLink2)
             {
                 isAsset2Loaded = true;
             }
+        }
+
+        if(PendingLink2 == null)
+        {
+            isAsset2Loaded = true;
         }
 
         if(isAsset1Loaded && isAsset2Loaded)
@@ -113,11 +122,13 @@ public class DataManager : MonoBehaviour
         switch(CurrentPreloadIndex)
         {
             case 0:
-                StartCoroutine(GetAssetBundleFromGoogleDrive(PendingLink1, PreloadCallback, PreloadProgressCallback));
+                //StartCoroutine(GetAssetBundleFromGoogleDrive(PendingLink1, PreloadCallback, PreloadProgressCallback));
+                StartCoroutine(GetDataFromGoogleDrive(PendingLink1, PreloadProgressCallback));
                 break;
 
             case 1:
-                StartCoroutine(GetAssetBundleFromGoogleDrive(PendingLink2, PreloadCallback, PreloadProgressCallback));
+                //StartCoroutine(GetAssetBundleFromGoogleDrive(PendingLink2, PreloadCallback, PreloadProgressCallback));
+                StartCoroutine(GetDataFromGoogleDrive(PendingLink1, PreloadProgressCallback));
                 break;
 
             default:
@@ -185,6 +196,50 @@ public class DataManager : MonoBehaviour
             }
         }
     }
+
+    
+    private IEnumerator GetDataFromGoogleDrive(string fileLink, Action<float> progressCallback = null)
+    {
+        string fileID = ExtractFileIdFromGoogleDriveLink(fileLink);
+        if(string.IsNullOrEmpty(fileID))
+        {
+            RuntimeManager.Instance.UI_MANAGER.ConfigLayer.UISystemMessage("[ERROR]: Preload failed. Wrong link.");
+            yield break;
+        }
+        
+
+        string url = $"https://www.googleapis.com/drive/v3/files/{fileID}?alt=media&key={RuntimeManager.Instance.STUDYVR_IAIRTABLE.GoogleAPIKey}";
+
+        UnityWebRequest webRequest = UnityWebRequest.Get(url);
+
+        AsyncOperation asyncOperation = webRequest.SendWebRequest();
+
+        while (!asyncOperation.isDone)
+        {
+            progressCallback?.Invoke(Mathf.Clamp01(asyncOperation.progress));
+            yield return null;
+        }
+
+        if (webRequest.result == UnityWebRequest.Result.Success)
+        {
+            byte[] data = webRequest.downloadHandler.data;
+
+            switch(GetFileType(data))
+            {
+                case "zip":
+                    Debug.Log("Extracting Zip File");
+                    string extreactPath = HandleZip(fileID, data);
+
+                    HandleExtractedFile(fileLink, extreactPath);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    }
+
+
     string ExtractFileIdFromGoogleDriveLink(string link)
     {
         string pattern = @"/file/d/([^/]+)/";
@@ -197,5 +252,153 @@ public class DataManager : MonoBehaviour
         }
 
         return string.Empty;
+    }
+
+    string GetFileType(byte[] data)
+    {
+        byte[] jpgMB = new byte[] { 0xFF, 0xD8, 0xFF };
+        byte[] pngMB = new byte[] { 0x89, 0x50, 0x4E, 0x47 };
+        byte[] zipMB = new byte[] { 0x50, 0x4B, 0x03, 0x04 };
+
+        if(StartsWithBytes(data, jpgMB))
+        {
+            return "jpg";
+        }
+        else if(StartsWithBytes(data, pngMB))
+        {
+            return "png";
+        }
+        else if(StartsWithBytes(data, zipMB))
+        {
+            return "zip";
+        }
+        else
+        {
+            return "unknown";
+        }
+
+
+    }
+
+    bool StartsWithBytes(byte[] data, byte[] pattern)
+    {
+        if(data.Length < pattern.Length)
+        {
+            return false;
+        }
+
+        for(int i = 0; i < pattern.Length; i++)
+        {
+            if(data[i] != pattern[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private string HandleZip(string fileID, byte[] data)
+    {
+        RuntimeManager.Instance.UI_MANAGER.ConfigLayer.UISystemMessage($"[System]: Handling Zip file...");
+        try
+        {
+            string path = System.IO.Path.Combine(Application.persistentDataPath, $"{fileID}.zip");
+
+            System.IO.File.WriteAllBytes(path, data);
+
+            string extractPath = System.IO.Path.Combine(Application.persistentDataPath, fileID);
+
+            ZipFile.ExtractToDirectory(path, extractPath);
+
+            return extractPath;
+        }
+        catch(Exception e)
+        {
+            RuntimeManager.Instance.UI_MANAGER.ConfigLayer.UISystemMessage($"[Error]: {e.Message}");
+            return null;
+        }
+    }
+
+    void HandleExtractedFile(string filelink, string extractPath)
+    {
+        
+        string[] ObjPath = Directory.GetFiles(extractPath, "*.obj");
+        string[] PlyPath = Directory.GetFiles(extractPath, "*.ply");
+
+        RuntimeManager.Instance.UI_MANAGER.ConfigLayer.UISystemMessage($"{ObjPath.Length}, {extractPath}");   
+
+
+        if(ObjPath.Length > 0)
+        {
+            try
+            {
+                MeshSequenceStreamer meshSequenceStreamer = new GameObject().AddComponent<MeshSequenceStreamer>();
+                meshSequenceStreamer.LoadMeshSequenceInfo(extractPath, MeshSequenceLoadProgress, HandleMeshSequence, filelink);
+            }
+            catch(Exception e)
+            {
+                RuntimeManager.Instance.UI_MANAGER.ConfigLayer.UISystemMessage($"[Error]: {e.Message}");
+            }
+        }
+    }
+
+    private void HandleMeshSequence(GameObject gobj, string fileLink)
+    {
+        PreloadObjects.Add(new PreloadObject(fileLink, gobj));
+        CurrentPreloadIndex++;
+        
+        Preload();
+    }
+
+    void MeshSequenceLoadProgress(float progress)
+    {
+        RuntimeManager.Instance.UI_MANAGER.ConfigLayer.UISystemMessage($"[System]: Loading mesh sequence {Math.Round(progress, 2)}%");
+    }
+
+    void OnApplicationQuit()
+    {
+        ClearDirectory(Application.persistentDataPath);
+    }
+
+    public void OnClearCacheClicked()
+    {
+        try
+        {
+            ClearDirectory(Application.persistentDataPath);
+        }
+        catch(Exception e)
+        {
+            RuntimeManager.Instance.UI_MANAGER.ConfigLayer.UISystemMessage($"[Error]: {e.Message}");
+        }
+    }
+
+    private void ClearDirectory(string path)
+    {
+        try
+        {
+            // Check if the directory exists
+            if (Directory.Exists(path))
+            {
+                // Delete all files in the directory
+                string[] files = Directory.GetFiles(path);
+                foreach (string file in files)
+                {
+                    File.Delete(file);
+                }
+
+                // Delete all subdirectories and their contents
+                string[] subdirectories = Directory.GetDirectories(path);
+                foreach (string directory in subdirectories)
+                {
+                    ClearDirectory(directory);
+                    Directory.Delete(directory);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Error clearing persistent data: " + e.Message);
+        }
     }
 }
