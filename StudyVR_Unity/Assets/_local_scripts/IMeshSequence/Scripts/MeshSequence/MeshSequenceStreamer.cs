@@ -35,9 +35,6 @@ public class MeshSequenceStreamer : MonoBehaviour
     
     public void LoadMeshSequenceInfo(string folderPath = "", Action<float> ProgressCallback = null, Action<GameObject, string> OnLoadedCallback = null, string fileLink = "")
     {
-        
-        RuntimeManager.Instance.UI_MANAGER.ConfigLayer.UISystemMessage($"[System]: Handling Mesh Sequence...");
-
         if (folderPath == "") { folderPath = MeshSequencePath; }
         else { MeshSequencePath = folderPath; }
 
@@ -68,42 +65,39 @@ public class MeshSequenceStreamer : MonoBehaviour
         }
     }
 
+    public void EditorLoadMeshSequenceInfo(string folderPath = "", Action<float> ProgressCallback = null, Action<GameObject, string> OnLoadedCallback = null, string fileLink = "")
+    {
+        if (folderPath == "") { folderPath = MeshSequencePath; }
+        else { MeshSequencePath = folderPath; }
+
+        if (Directory.Exists(folderPath))
+        {
+            FramePaths = Directory.GetFiles(folderPath, "*.obj");
+
+            string[] AudioPath = Directory.GetFiles(folderPath, "*.wav");
+
+            if (FramePaths.Length > 0)
+            {
+                FrameCount = FramePaths.Length;
+
+                if (AudioPath.Length > 0)
+                {
+                    PlayerAudioSource = this.gameObject.AddComponent<AudioSource>();
+
+                    EditorLoadAudio(AudioPath[0].Replace("\\", "/"));
+                }
+
+                meshSequenceContainer = this.gameObject.AddComponent<MeshSequenceContainer>();
+                meshRenderer = this.gameObject.AddComponent<MeshRenderer>();
+                meshFilter = this.gameObject.AddComponent<MeshFilter>();
+
+                EditorLoadFrames(ProgressCallback, OnLoadedCallback, fileLink);
+            }
+        }
+    }
+
     public IEnumerator LoadAudio(string filePath)
     {
-        /* // Get Audio Clip from UnityWebRequest
-        UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(filePath, AudioType.WAV);
-
-        yield return www.SendWebRequest();
-
-        Debug.Log(filePath);
-
-        if (www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
-        {
-            Debug.LogError("Error loading audio file: " + www.error);
-        }
-        else
-        {
-            AudioClip audioClip = DownloadHandlerAudioClip.GetContent(www);
-
-            if (audioClip != null)
-            {
-                Debug.Log("Audio clip loaded successfully.");
-                PlayerAudioSource.clip = audioClip;
-                PlayerAudioSource.loop = true;
-
-                isPlayingAudio = true;
-            }
-            else
-            {
-                Debug.LogError("Failed to load audio clip from path: " + filePath);
-            }
-        }
-
-        www.Dispose();
-        */
-
-
-        
         string url = "file://" + filePath;
 
         using (WWW www = new WWW(url))
@@ -125,18 +119,36 @@ public class MeshSequenceStreamer : MonoBehaviour
         }
     }
 
+    public void EditorLoadAudio(string filePath)
+    {
+        string url = "file://" + filePath;
+
+        using (WWW www = new WWW(url))
+        {
+            if (www.error == null)
+            {
+                PlayerAudioSource.clip = www.GetAudioClip();
+                Debug.Log("Audio clip loaded successfully.");
+                PlayerAudioSource.playOnAwake = false;
+                PlayerAudioSource.loop = true;
+
+            }
+            else
+            {
+                Debug.LogError("Error loading audio file: " + www.error);
+            }
+        }
+    }
+
 
     public IEnumerator LoadFrames(Action<float> ProgressCallback = null, Action<GameObject, string> OnLoadedCallback = null, string fileLink = "")
     {
 
         while(meshSequenceContainer.MeshSequence.Count < (CurrentFrameIndex + 1))
         {
-
-            //RuntimeManager.Instance.UI_MANAGER.ConfigLayer.UISystemMessage($"[System]: Loading Frames {(1.0f * CurrentFrameIndex / FrameCount) * 100f}%");
-
             OBJLoader.LoadMatMesh(FramePaths[CurrentFrameIndex], MeshCallback, MatCallback);
 
-            //if (ProgressCallback != null) ProgressCallback.Invoke((1.0f * CurrentFrameIndex / FrameCount) * 100f);
+            if (ProgressCallback != null) ProgressCallback.Invoke((1.0f * CurrentFrameIndex / FrameCount) * 100f);
 
             CurrentFrameIndex = (CurrentFrameIndex + 1) >= FrameCount ? 0 : CurrentFrameIndex + 1;
             
@@ -153,24 +165,26 @@ public class MeshSequenceStreamer : MonoBehaviour
         Destroy(this);
     }
 
-
-
-    private void SwapFrame(bool isReversing = false)
+    public void EditorLoadFrames(Action<float> ProgressCallback = null, Action<GameObject, string> OnLoadedCallback = null, string fileLink = "")
     {
-        meshRenderer.sharedMaterial = meshSequenceContainer.MaterialSequence[CurrentFrameIndex];
-        meshFilter.mesh = meshSequenceContainer.MeshSequence[CurrentFrameIndex];
 
-        int NextFrame = 0;
-        if (isReversing)
+        while (meshSequenceContainer.MeshSequence.Count < (CurrentFrameIndex + 1))
         {
-            NextFrame = (CurrentFrameIndex - 1) < 0 ? FrameCount - 1 : CurrentFrameIndex - 1;
-        }
-        else
-        {
-            NextFrame = (CurrentFrameIndex + 1) >= FrameCount ? 0 : CurrentFrameIndex + 1;
+            OBJLoader.LoadMatMesh(FramePaths[CurrentFrameIndex], MeshCallback, MatCallback);
+
+            if (ProgressCallback != null) ProgressCallback.Invoke((1.0f * CurrentFrameIndex / FrameCount) * 100f);
+
+            CurrentFrameIndex = (CurrentFrameIndex + 1) >= FrameCount ? 0 : CurrentFrameIndex + 1;
         }
 
-        CurrentFrameIndex = NextFrame;
+
+        this.gameObject.AddComponent<MeshSequenceStreamerPlayer>();
+
+        if (OnLoadedCallback != null) OnLoadedCallback.Invoke(this.gameObject, fileLink);
+        Debug.Log("Mesh Sequence Loaded");
+
+
+        DestroyImmediate(this);
     }
 
     void MatCallback(Material[] mats)

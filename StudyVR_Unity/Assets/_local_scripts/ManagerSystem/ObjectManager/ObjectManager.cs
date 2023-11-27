@@ -63,6 +63,7 @@ public class ObjectManager : MonoBehaviour
 
             gameObject.transform.rotation = Quaternion.Euler(0, 180, 0);
 
+            gameObject.SetActive(true);
             meshSequenceStreamerPlayer.Stop();
             meshSequenceStreamerPlayer.Play();
         }

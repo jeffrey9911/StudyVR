@@ -233,6 +233,10 @@ public class DataManager : MonoBehaviour
                     HandleExtractedFile(fileLink, extreactPath);
                     break;
 
+                case "Defult":
+                    HandleAssetBundle(fileID, fileLink, data);
+                    break;
+
                 default:
                     break;
             }
@@ -256,25 +260,15 @@ public class DataManager : MonoBehaviour
 
     string GetFileType(byte[] data)
     {
-        byte[] jpgMB = new byte[] { 0xFF, 0xD8, 0xFF };
-        byte[] pngMB = new byte[] { 0x89, 0x50, 0x4E, 0x47 };
         byte[] zipMB = new byte[] { 0x50, 0x4B, 0x03, 0x04 };
 
-        if(StartsWithBytes(data, jpgMB))
-        {
-            return "jpg";
-        }
-        else if(StartsWithBytes(data, pngMB))
-        {
-            return "png";
-        }
-        else if(StartsWithBytes(data, zipMB))
+        if(StartsWithBytes(data, zipMB))
         {
             return "zip";
         }
         else
         {
-            return "unknown";
+            return "Defult";
         }
 
 
@@ -296,6 +290,28 @@ public class DataManager : MonoBehaviour
         }
 
         return true;
+    }
+
+    void HandleAssetBundle(string fileID, string fileLink, byte[] data)
+    {
+        string path = System.IO.Path.Combine(Application.persistentDataPath, $"{fileID}.assetbundle");
+
+        System.IO.File.WriteAllBytes(path, data);
+
+        AssetBundle bundle = AssetBundle.LoadFromFile(path);
+
+        if (bundle != null)
+        {
+            string[] assetNames = bundle.GetAllAssetNames();
+            GameObject gameObject;
+
+            if (assetNames.Length > 0)
+            {
+                gameObject = bundle.LoadAsset<GameObject>(assetNames[0]);
+
+                HandleLoadedObject(gameObject, fileLink);
+            }
+        }
     }
 
     private string HandleZip(string fileID, byte[] data)
@@ -334,7 +350,20 @@ public class DataManager : MonoBehaviour
             try
             {
                 MeshSequenceStreamer meshSequenceStreamer = new GameObject().AddComponent<MeshSequenceStreamer>();
-                meshSequenceStreamer.LoadMeshSequenceInfo(extractPath, MeshSequenceLoadProgress, HandleMeshSequence, filelink);
+                meshSequenceStreamer.LoadMeshSequenceInfo(extractPath, MeshSequenceLoadProgress, HandleLoadedObject, filelink);
+            }
+            catch(Exception e)
+            {
+                RuntimeManager.Instance.UI_MANAGER.ConfigLayer.UISystemMessage($"[Error]: {e.Message}");
+            }
+        }
+
+        if(PlyPath.Length > 0)
+        {
+            try
+            {
+                MeshSequenceStreamer meshSequenceStreamer = new GameObject().AddComponent<MeshSequenceStreamer>();
+                meshSequenceStreamer.LoadMeshSequenceInfo(extractPath, MeshSequenceLoadProgress, HandleLoadedObject, filelink);
             }
             catch(Exception e)
             {
@@ -343,9 +372,10 @@ public class DataManager : MonoBehaviour
         }
     }
 
-    private void HandleMeshSequence(GameObject gobj, string fileLink)
+    private void HandleLoadedObject(GameObject gobj, string fileLink)
     {
         PreloadObjects.Add(new PreloadObject(fileLink, gobj));
+        PreloadObjects[PreloadObjects.Count - 1].ObjectInstance.SetActive(false);
         CurrentPreloadIndex++;
         
         Preload();

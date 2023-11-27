@@ -16,11 +16,19 @@ public class WebViewManager : MonoBehaviour
         WebViewEnable = true;
     }
 
+    [ContextMenu("LoadMainStudyWebview")]
     public void LoadMainStudyWebview()
     {
         m_webView.SetUrl(RuntimeManager.Instance.DATA_MANAGER.LoadedRecord.fields.MainStudyLink);
         m_webView.LoadUrl(RuntimeManager.Instance.DATA_MANAGER.LoadedRecord.fields.MainStudyLink);
         WebViewEnable = true;
+
+        StartCoroutine("LoadObject");
+    }
+
+    void LoadObject()
+    {
+        RuntimeManager.Instance.OBJECT_MANAGER.SpawnObject();
     }
 
     void Update()
