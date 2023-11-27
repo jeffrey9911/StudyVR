@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.buildingvolumes.geometry_sequence_streaming": "https://github.com/BuildingVolumes/Geometry_Sequence_Streaming_Package.git",
     "com.unity.collab-proxy": "2.2.0",
     "com.unity.feature.development": "1.0.1",
     "com.unity.probuilder": "5.2.0",
