@@ -285,8 +285,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1fbf7671cd605b44eb4909dad8874766, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  AIRTABLE_API_KEY: 
-  GOOGLE_API_KEY: 
+  AIRTABLE_API_KEY: pat37GAOTtKkSPfb4.738ae904fe3eb0765079bd99848a5edec1df5fed567b9beb910897ed2890b30b
+  GOOGLE_API_KEY: AIzaSyDdfTzQOOQ_Vr4yHTWFliSpVTm3ZRC03PE
   InitializeOnStart: 1
   isReady: 1
 --- !u!4 &18720334
@@ -1452,7 +1452,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &218368744
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3278,7 +3278,7 @@ Transform:
   m_GameObject: {fileID: 517583152}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.5, y: 0.6, z: 4}
+  m_LocalPosition: {x: 2.5, y: 0.522, z: 4}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4537,7 +4537,7 @@ Transform:
   m_GameObject: {fileID: 741522479}
   serializedVersion: 2
   m_LocalRotation: {x: 0.022004012, y: -0, z: -0, w: 0.9997579}
-  m_LocalPosition: {x: 0, y: -0.606, z: 0.56}
+  m_LocalPosition: {x: 0, y: 1.351, z: 1.53}
   m_LocalScale: {x: 0.001075, y: 0.001075, z: 0.001075}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4704,7 +4704,7 @@ Transform:
   m_GameObject: {fileID: 755227111}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.6, z: 4}
+  m_LocalPosition: {x: 0, y: 0.522, z: 4}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8149,7 +8149,7 @@ Transform:
   m_GameObject: {fileID: 1382035699}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.648, z: 0}
+  m_LocalPosition: {x: 0, y: -1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -8299,7 +8299,7 @@ MonoBehaviour:
   requestEyeTrackingPermissionOnStartup: 0
   requestScenePermissionOnStartup: 0
   _localDimming: 1
-  _trackingOriginType: 0
+  _trackingOriginType: 1
   usePositionTracking: 1
   useRotationTracking: 1
   useIPDInPositionTracking: 1
@@ -8352,7 +8352,7 @@ Transform:
   m_GameObject: {fileID: 1401541483}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.5, y: 0.6, z: 4}
+  m_LocalPosition: {x: -2.5, y: 0.522, z: 4}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -24779,7 +24779,7 @@ Transform:
   m_GameObject: {fileID: 5930587302387135061}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2, z: 0}
+  m_LocalPosition: {x: 0, y: 1.655, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -24848,7 +24848,7 @@ MonoBehaviour:
   JumpForce: 0.3
   RotationAmount: 1.5
   RotationRatchet: 45
-  SnapRotation: 1
+  SnapRotation: 0
   RotateAroundGuardianCenter: 0
   FixedSpeedSteps: 0
   HmdResetsY: 1

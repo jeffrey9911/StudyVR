@@ -1,14 +1,13 @@
 {
   "dependencies": {
     "com.buildingvolumes.geometry_sequence_streaming": {
-      "version": "https://github.com/BuildingVolumes/Geometry_Sequence_Streaming_Package.git",
+      "version": "file:../Externals/Geometry_Sequence_Streaming_Package",
       "depth": 0,
-      "source": "git",
+      "source": "local",
       "dependencies": {
         "com.unity.jobs": "0.70.0-preview.7",
         "com.unity.timeline": "1.6.4"
-      },
-      "hash": "7f95d1a257966ed77c61167037389f1152a99b29"
+      }
     },
     "com.unity.burst": {
       "version": "1.8.9",

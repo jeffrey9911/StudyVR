@@ -1,3 +1,4 @@
+using BuildingVolumes.Streaming;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -44,6 +45,11 @@ public class DataManager : MonoBehaviour
 
     public record_data LoadedRecord;
     public StudyType CurrentStudyType = StudyType.Noset;
+
+    private void Start()
+    {
+        ClearDirectory(Application.persistentDataPath);
+    }
 
     public void LoadRecordData(record_data rd)
     {
@@ -362,18 +368,39 @@ public class DataManager : MonoBehaviour
         {
             try
             {
-                MeshSequenceStreamer meshSequenceStreamer = new GameObject().AddComponent<MeshSequenceStreamer>();
-                meshSequenceStreamer.LoadMeshSequenceInfo(extractPath, MeshSequenceLoadProgress, HandleLoadedObject, filelink);
+                GameObject plyStreamer = Instantiate(Resources.Load<GameObject>("Prefabs/PLYStreamer"));
+                GeometrySequencePlayer geometrySequencePlayer = plyStreamer.GetComponent<GeometrySequencePlayer>();
+
+                geometrySequencePlayer.SetupGeometryStream();
+                geometrySequencePlayer.transform.GetComponent<GeometrySequenceStream>().parentTransform = geometrySequencePlayer.transform;
+
+                geometrySequencePlayer.LoadSequence(extractPath, GeometrySequenceStream.PathType.RelativeToPersistentDataPath, 30, false);
+
+                
+                
+
+                geometrySequencePlayer.SetLoopPlay(true);
+
+                geometrySequencePlayer.Pause();
+
+                
+
+
+                HandleLoadedObject(geometrySequencePlayer.gameObject, filelink);
             }
             catch(Exception e)
             {
-                RuntimeManager.Instance.UI_MANAGER.ConfigLayer.UISystemMessage($"[Error]: {e.Message}");
+                RuntimeManager.Instance.UI_MANAGER.ConfigLayer.UISystemMessage($"[ERROR]: {e.Message}");
+                Debug.LogError(e);
             }
         }
     }
 
+
     private void HandleLoadedObject(GameObject gobj, string fileLink)
     {
+        gobj.SetActive(false);
+
         PreloadObjects.Add(new PreloadObject(fileLink, gobj));
         PreloadObjects[PreloadObjects.Count - 1].ObjectInstance.SetActive(false);
         CurrentPreloadIndex++;

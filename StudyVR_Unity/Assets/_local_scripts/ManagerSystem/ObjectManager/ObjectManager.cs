@@ -1,3 +1,4 @@
+using BuildingVolumes.Streaming;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -13,11 +14,18 @@ public class ObjectManager : MonoBehaviour
 
     private List<GameObject> SpawnedObjects = new List<GameObject>();
 
+    bool GroundFlag = false;
+
     void Start()
     {
         LeftObjectPivot.gameObject.SetActive(false);
         MiddleObjectPiovt.gameObject.SetActive(false);
         RightObjectPivot.gameObject.SetActive(false);
+    }
+
+    private void Update()
+    {
+        
     }
 
     public void SpawnObject()
@@ -61,12 +69,88 @@ public class ObjectManager : MonoBehaviour
                 pivotPos.z
             );
 
-            gameObject.transform.rotation = Quaternion.Euler(0, 180, 0);
+            //gameObject.transform.rotation = Quaternion.Euler(0, 180, 0);
 
             gameObject.SetActive(true);
             meshSequenceStreamerPlayer.Stop();
             meshSequenceStreamerPlayer.Play();
         }
+
+        if(gameObject.TryGetComponent<GeometrySequencePlayer>(out GeometrySequencePlayer geometrySequencePlayer))
+        {
+            gameObject.SetActive(true);
+            
+            StartCoroutine(AwaitForPlayGeometrySequence(geometrySequencePlayer, pivotPos));
+        }
+    }
+
+    IEnumerator AwaitForPlayGeometrySequence(GeometrySequencePlayer geometrySequencePlayer, Vector3 pivotPos)
+    {
+        while(!geometrySequencePlayer.IsPlaying())
+        {
+            geometrySequencePlayer.PlayFromStart();
+
+            yield return null;
+        }
+
+        while(true)
+        {
+            if(PosGroundObject(geometrySequencePlayer.gameObject, pivotPos))
+            {
+                break;
+            }
+        }
+    }
+
+
+
+    bool PosGroundObject(GameObject gobj, Vector3 pivotPos)
+    {
+        MeshFilter msh = FindMeshFilterInChildren(gobj);
+
+        if(msh == null) return false;
+
+        Bounds bounds = msh.mesh.bounds;
+
+        if (bounds == null) return false;
+
+        if (bounds.min.y - bounds.max.y == 0) return false;
+
+        gobj.transform.position = new Vector3
+            (
+                pivotPos.x,
+                pivotPos.y - bounds.min.y,
+                pivotPos.z
+            );
+        
+        //gobj.transform.rotation = Quaternion.Euler(0, 180, 0);
+
+
+        return true;
+    }
+
+
+    // A function that recursively looks for a MeshFilter component in the children of a GameObject and returns the first one it finds.
+    private MeshFilter FindMeshFilterInChildren(GameObject gameObject)
+    {
+        MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
+
+        if (meshFilter != null)
+        {
+            return meshFilter;
+        }
+
+        foreach (Transform child in gameObject.transform)
+        {
+            meshFilter = FindMeshFilterInChildren(child.gameObject);
+
+            if (meshFilter != null)
+            {
+                return meshFilter;
+            }
+        }
+
+        return null;
     }
 
     private void AwaitPreload()

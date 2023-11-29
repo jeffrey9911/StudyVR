@@ -89,6 +89,7 @@ public class ConfigCanvas : MonoBehaviour
         LoadQuestionnaireInfo();
     }
 
+    [ContextMenu("NextConfigOnClick")]
     public void NextConfigOnClick()
     {
         if (CurrentConfigIndex < StudyVR_IAirtable.studyvr_config_records.records.Count - 1)

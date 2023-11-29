@@ -171,6 +171,6 @@ public class UserCanvas : MonoBehaviour
 
     public void ResetQuestionPanel()
     {
-        FollowTransform.localPosition = new Vector3(0f, -0.6f, 0.5f);
+        FollowTransform.localPosition = new Vector3(0f, 1.35f, 1.53f);
     }
 }

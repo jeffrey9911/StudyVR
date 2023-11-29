@@ -23,7 +23,9 @@ public class WebViewManager : MonoBehaviour
         m_webView.LoadUrl(RuntimeManager.Instance.DATA_MANAGER.LoadedRecord.fields.MainStudyLink);
         WebViewEnable = true;
 
-        StartCoroutine("LoadObject");
+        //StartCoroutine("LoadObject");
+
+        LoadObject();
     }
 
     void LoadObject()

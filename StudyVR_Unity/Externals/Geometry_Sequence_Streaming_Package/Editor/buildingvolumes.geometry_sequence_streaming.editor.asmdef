@@ -1,0 +1,19 @@
+{
+    "name": "buildingvolumes.geometry_sequence_streaming.editor",
+    "rootNamespace": "",
+    "references": [
+        "buildingvolumes.geometry_sequence_streaming",
+        "Unity.Timeline"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
