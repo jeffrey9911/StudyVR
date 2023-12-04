@@ -93,13 +93,20 @@ public class MeshSequenceStreamerPlayer : MonoBehaviour
     public void Play()
     {
         isPlaying = true;
-        PlayerAudioSource.Play();
+        if(isPlayingAudio)
+        {
+            PlayerAudioSource.Play();
+        }
     }
 
     public void Stop()
     {
         isPlaying = false;
-        PlayerAudioSource.Stop();
+        if(isPlayingAudio)
+        {
+            PlayerAudioSource.Stop();
+        }
+        
         CurrentFrameIndex = 0;
     }
 

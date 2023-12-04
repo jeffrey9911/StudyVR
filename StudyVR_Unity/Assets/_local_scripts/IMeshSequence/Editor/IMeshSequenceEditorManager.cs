@@ -3,45 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-[CustomEditor(typeof(MeshSequenceLoader))]
-public class IMeshSequenceLoaderEditorManager : Editor
-{
 
-    SerializedProperty MeshSequenceFolder;
-    MeshSequenceLoader meshSequenceLoader;
-
-    private void OnEnable()
-    {
-        MeshSequenceFolder = serializedObject.FindProperty("MeshSequenceFolder");
-
-        meshSequenceLoader = (MeshSequenceLoader)target;
-
-        serializedObject.ApplyModifiedProperties();
-    }
-    
-    public override void OnInspectorGUI()
-    {
-        serializedObject.Update();
-
-        DrawDefaultInspector();
-
-        if (GUILayout.Button("Load Sequence Folder Path"))
-        {
-            string path = EditorUtility.OpenFolderPanel("Open a folder that contains a Geometry Sequence (.obj)", meshSequenceLoader.MeshSequenceFolder, "");
-            MeshSequenceFolder.stringValue = path;
-        }
-
-        if (GUILayout.Button("Load Sequenced Mesh"))
-        {
-            meshSequenceLoader.LoadMeshSequenceByPath();
-        }
-
-        if(meshSequenceLoader != null)
-        {
-            serializedObject.ApplyModifiedProperties();
-        }
-    }
-}
 
 
 

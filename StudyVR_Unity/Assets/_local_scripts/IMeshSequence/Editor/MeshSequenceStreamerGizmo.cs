@@ -36,8 +36,10 @@ public class MeshSequenceStreamerGizmo : EditorWindow
 
     string SequencePath = "";
     string ExportPath = "";
-    string ExportName = "";
-    string ExportFilePath = "";
+    string SequenceName = "";
+
+    float progressBarPercent = 0;
+    string progressBarText = "";
 
     private void OnGUI()
     {
@@ -63,57 +65,184 @@ public class MeshSequenceStreamerGizmo : EditorWindow
 
         GUILayout.Space(20);
 
-        ExportName = EditorGUILayout.TextField("Export Name", ExportName);
-
         if (GUILayout.Button("Create MeshSequence Bundle"))
         {
-            ExportFilePath = System.IO.Path.Combine(ExportPath, ExportName + ".unity3d");
-
-            string[] ObjPath = Directory.GetFiles(SequencePath, "*.obj");
-
-            if (ObjPath.Length > 0)
-            {
-                try
-                {
-                    MeshSequenceStreamer meshSequenceStreamer = new GameObject().AddComponent<MeshSequenceStreamer>();
-                    meshSequenceStreamer.EditorLoadMeshSequenceInfo(SequencePath, null, HandleLoadedObject);
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError(e);
-                }
-            }
+            AssetDatabase.RemoveUnusedAssetBundleNames();
+            AssetDatabase.Refresh();
+            LoadObjects(SequencePath, ExportAssetBundle);
         }
+
+        GUILayout.Space(20);
+
+        EditorGUI.ProgressBar(new Rect(3, position.height - 20, position.width - 6, 20), progressBarPercent, progressBarText);
     }
 
+    
 
-    void HandleLoadedObject(GameObject gobj, string fileLink)
+    void ExportAssetBundle(GameObject gobj)
     {
-        PrefabUtility.SaveAsPrefabAsset(gobj, "Assets/Resources/GeneratedPrefabs/" + ExportName + ".prefab");
-        CreateAssetBundle(ExportPath, ExportName);
-    }
-
-    public static void CreateAssetBundle(string assetBundlePath, string assetBundleName)
-    {
-        GameObject prefab = Resources.Load<GameObject>($"GeneratedPrefabs/{assetBundleName}");
-
-        if (prefab == null)
+        MeshSequenceLoader msl = gobj.GetComponent<MeshSequenceLoader>();
+        if(msl != null)
         {
-            Debug.LogError("Prefab not found. Make sure it's in a Resources folder.");
-            return;
+            DestroyImmediate(msl);
         }
 
-        AssetBundleBuild[] buildMap = new AssetBundleBuild[1];
-        buildMap[0].assetBundleName = assetBundleName;
-        buildMap[0].assetNames = new string[] { AssetDatabase.GetAssetPath(prefab) };
+        if (!Directory.Exists(Application.dataPath + $"/Resources/IMESHCACHE/GeneratedPrefabs/"))
+        {
+            Directory.CreateDirectory(Application.dataPath + $"/Resources/IMESHCACHE/GeneratedPrefabs/");
+        }
 
-        BuildAssetBundleOptions buildOptions = BuildAssetBundleOptions.None;
 
-        BuildPipeline.BuildAssetBundles(assetBundlePath, buildMap, buildOptions, BuildTarget.Android);
+        GameObject prefab = PrefabUtility.SaveAsPrefabAsset(gobj, "Assets/Resources/IMESHCACHE/GeneratedPrefabs/" + SequenceName + ".prefab");
+
+
+        AssetBundleBuild build = new AssetBundleBuild
+        {
+            assetNames = new string[] { AssetDatabase.GetAssetPath(prefab) },
+            assetBundleName = $"iMS_{SequenceName}"
+        };
+
+        ExportPath += $"/{SequenceName}";
+
+        if (!Directory.Exists(ExportPath))
+        {
+            Directory.CreateDirectory(ExportPath);
+        }
+
+
+        BuildPipeline.BuildAssetBundles(ExportPath, new AssetBundleBuild[] { build }, BuildAssetBundleOptions.None, BuildTarget.Android);
 
         AssetDatabase.Refresh();
 
-        Debug.Log("Asset bundle created at: " + assetBundlePath + assetBundleName);
+        Debug.Log("Asset bundle created!");
 
+        ClearDirectory(Application.dataPath + $"/Resources/IMESHCACHE/");
+        DestroyImmediate(gobj);
+    }
+
+
+    void LoadObjects(string objFolderPath, Action<GameObject> OnObjectsLoaded = null, Action<float> Progress = null)
+    {
+        if(Directory.Exists(objFolderPath))
+        {
+            string[] ObjPaths = Directory.GetFiles(objFolderPath, "*.obj");
+            string[] MtlPaths = Directory.GetFiles(objFolderPath, "*.mtl");
+            string[] TexPaths = Directory.GetFiles(objFolderPath, "*.jpg");
+
+            string[] AudioPaths = Directory.GetFiles(objFolderPath, "*.wav");
+
+            if(ObjPaths.Length > 0)
+            {
+                SetSequenceName(ObjPaths[0]);
+
+                foreach(string FramePath in ObjPaths)
+                {
+                    LoadFileToResource(FramePath);
+                }
+
+                if(MtlPaths.Length > 0)
+                {
+                    foreach (string FramePath in MtlPaths)
+                    {
+                        LoadFileToResource(FramePath);
+                    }
+                }
+
+                if (TexPaths.Length > 0)
+                {
+                    foreach (string FramePath in TexPaths)
+                    {
+                        LoadFileToResource(FramePath);
+                    }
+                }
+
+                
+            }
+        }
+        else
+        {
+            Debug.LogError($"Folder doesn't exist! {objFolderPath}");
+        }
+
+        UnityEditor.AssetDatabase.Refresh();
+
+        MeshSequenceLoader meshSequenceLoader = new GameObject("MeshSequenceLoader").AddComponent<MeshSequenceLoader>();
+        meshSequenceLoader.LoadMeshSequence(SequenceName, OnObjectsLoaded);
+    }
+
+    void LoadFileToResource(string filePath)
+    {
+        if(!Directory.Exists(Application.dataPath + $"/Resources/IMESHCACHE/{SequenceName}/"))
+        {
+            Directory.CreateDirectory(Application.dataPath + $"/Resources/IMESHCACHE/{SequenceName}/");
+        }
+
+        byte[] fileData = File.ReadAllBytes(filePath);
+
+        string destinationPath = Path.Combine(Application.dataPath + $"/Resources/IMESHCACHE/{SequenceName}/", Path.GetFileName(filePath));
+
+        File.WriteAllBytes(destinationPath, fileData);
+    }
+
+    void SetSequenceName(string filePath)
+    {
+        string name = Path.GetFileNameWithoutExtension(filePath);
+
+        int IndexDigits = 0;
+
+        for (int i = name.Length - 1; i >= 0; i--)
+        {
+            if (char.IsDigit(name[i])) IndexDigits++;
+            else break;
+        }
+
+        SequenceName = name.Substring(0, name.Length - IndexDigits);
+    }
+
+    void ClearDirectory(string path)
+    {
+        try
+        {
+            // Check if the directory exists
+            if (Directory.Exists(path))
+            {
+                // Delete all files in the directory
+                string[] files = Directory.GetFiles(path);
+                foreach (string file in files)
+                {
+                    File.Delete(file);
+                }
+
+                // Delete all subdirectories and their contents
+                string[] subdirectories = Directory.GetDirectories(path);
+                foreach (string directory in subdirectories)
+                {
+                    ClearDirectory(directory);
+                    Directory.Delete(directory);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Error clearing persistent data: " + e.Message);
+        }
+    }
+
+    void ClearAssetBundleNames()
+    {
+        string[] assetPaths = AssetDatabase.GetAllAssetPaths();
+
+        foreach(string assetPath in assetPaths)
+        {
+            AssetImporter assetImporter = AssetImporter.GetAtPath(assetPath);
+
+            if(assetImporter != null)
+            {
+                assetImporter.SetAssetBundleNameAndVariant(null, null);
+            }
+        }
+
+        AssetDatabase.RemoveUnusedAssetBundleNames();
+        AssetDatabase.Refresh();
     }
 }
