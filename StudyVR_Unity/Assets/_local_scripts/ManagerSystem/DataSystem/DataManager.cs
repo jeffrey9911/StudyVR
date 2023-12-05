@@ -22,6 +22,8 @@ public class PreloadObject
     }
 }
 
+
+
 public enum StudyType
 {
     Noset,
@@ -34,6 +36,12 @@ public class DataManager : MonoBehaviour
     public void OnConfigLoaded()
     {
         RuntimeManager.Instance.UI_MANAGER.ConfigLayer.LoadConfigsToDD();
+    }
+
+    [Serializable]
+    private class FileMetadata
+    {
+        public string name;
     }
 
     private string PendingLink1 = "";
@@ -203,50 +211,127 @@ public class DataManager : MonoBehaviour
         }
     }
 
+    [ContextMenu("TestFileName")]
+    public void TestFileName()
+    {
+        Debug.Log("TestFileName");
+        string url = "https://www.googleapis.com/drive/v3/files/1qKZpvyKFYJe689ZPCPJBrmh5z2tq0EP7?fields=name&key=AIzaSyBDKVSZXmLkRqQo9dMlqUfBagL349TNHFQ";
+
+        UnityWebRequest webRequest = UnityWebRequest.Get(url);
+
+        AsyncOperation asyncOperation = webRequest.SendWebRequest();
+
+        while(!asyncOperation.isDone)
+        {
+            Debug.Log("Downloading");
+        }
+
+        if (webRequest.result == UnityWebRequest.Result.Success)
+        {
+            string json = webRequest.downloadHandler.text;
+
+            FileMetadata fileMetadata = JsonUtility.FromJson<FileMetadata>(webRequest.downloadHandler.text);
+
+            if (fileMetadata != null)
+            {
+                string fileName = fileMetadata.name;
+                Debug.Log($"{Path.GetExtension(fileName)}");
+            }
+        }
+        else
+        {
+            Debug.Log("Error");
+        }
+    }
+
     
     private IEnumerator GetDataFromGoogleDrive(string fileLink, Action<float> progressCallback = null)
     {
+        Debug.Log("GetDataFromGoogleDrive");
         string fileID = ExtractFileIdFromGoogleDriveLink(fileLink);
         if(string.IsNullOrEmpty(fileID))
         {
             RuntimeManager.Instance.UI_MANAGER.ConfigLayer.UISystemMessage("[ERROR]: Preload failed. Wrong link.");
             yield break;
         }
+
+        string metaNameUrl = $"https://www.googleapis.com/drive/v3/files/{fileID}?fields=name&key={RuntimeManager.Instance.STUDYVR_IAIRTABLE.GoogleAPIKey}";
         
+        UnityWebRequest metaRequest = UnityWebRequest.Get(metaNameUrl);
 
-        string url = $"https://www.googleapis.com/drive/v3/files/{fileID}?alt=media&key={RuntimeManager.Instance.STUDYVR_IAIRTABLE.GoogleAPIKey}";
+        AsyncOperation metaAsyncOperation = metaRequest.SendWebRequest();
 
-        UnityWebRequest webRequest = UnityWebRequest.Get(url);
-
-        AsyncOperation asyncOperation = webRequest.SendWebRequest();
-
-        while (!asyncOperation.isDone)
+        while (!metaAsyncOperation.isDone)
         {
-            progressCallback?.Invoke(Mathf.Clamp01(asyncOperation.progress));
             yield return null;
         }
 
-        if (webRequest.result == UnityWebRequest.Result.Success)
+        if(metaRequest.result == UnityWebRequest.Result.Success)
         {
-            byte[] data = webRequest.downloadHandler.data;
+            Debug.Log("Success");
+            string url = $"https://www.googleapis.com/drive/v3/files/{fileID}?alt=media&key={RuntimeManager.Instance.STUDYVR_IAIRTABLE.GoogleAPIKey}";
 
-            switch(GetFileType(data))
+            switch (Path.GetExtension(JsonUtility.FromJson<FileMetadata>(metaRequest.downloadHandler.text).name))
             {
-                case "zip":
-                    Debug.Log("Extracting Zip File");
-                    string extreactPath = HandleZip(fileID, data);
+                case ".zip":
+                    UnityWebRequest webRequest = UnityWebRequest.Get(url);
 
-                    HandleExtractedFile(fileLink, extreactPath);
+                    AsyncOperation asyncOperation = webRequest.SendWebRequest();
+
+                    while (!asyncOperation.isDone)
+                    {
+                        progressCallback?.Invoke(Mathf.Clamp01(asyncOperation.progress));
+                        yield return null;
+                    }
+
+                    if (webRequest.result == UnityWebRequest.Result.Success)
+                    {
+                        byte[] data = webRequest.downloadHandler.data;
+
+                        string extreactPath = HandleZip(fileID, data);
+
+                        HandleExtractedFile(fileLink, extreactPath);
+                    }
                     break;
 
-                case "Defult":
-                    HandleAssetBundle(fileID, fileLink, data);
+
+                case ".uab":
+                    Debug.Log("UAB");
+                    UnityWebRequest uabRequest = UnityWebRequestAssetBundle.GetAssetBundle(url);
+
+                    AsyncOperation asyncUabOperation = uabRequest.SendWebRequest();
+
+                    while (!asyncUabOperation.isDone)
+                    {
+                        progressCallback?.Invoke(Mathf.Clamp01(asyncUabOperation.progress));
+                        yield return null;
+                    }
+
+                    if (uabRequest.result == UnityWebRequest.Result.Success)
+                    {
+                        AssetBundle bundle = DownloadHandlerAssetBundle.GetContent(uabRequest);
+
+                        if (bundle != null)
+                        {
+                            string[] assetNames = bundle.GetAllAssetNames();
+
+                            if (assetNames.Length > 0)
+                            {
+                                GameObject gameObject = Instantiate(bundle.LoadAsset<GameObject>(assetNames[0]));
+
+                                HandleLoadedObject(gameObject, fileLink);
+                            }
+                        }
+                    }
                     break;
+
 
                 default:
+                    Debug.Log(JsonUtility.FromJson<FileMetadata>(metaRequest.downloadHandler.text).name);
                     break;
             }
         }
+
     }
 
 
@@ -300,7 +385,7 @@ public class DataManager : MonoBehaviour
 
     void HandleAssetBundle(string fileID, string fileLink, byte[] data)
     {
-        string path = System.IO.Path.Combine(Application.persistentDataPath, $"{fileID}.assetbundle");
+        string path = System.IO.Path.Combine(Application.persistentDataPath, $"{fileID}");
 
         System.IO.File.WriteAllBytes(path, data);
 
@@ -309,11 +394,10 @@ public class DataManager : MonoBehaviour
         if (bundle != null)
         {
             string[] assetNames = bundle.GetAllAssetNames();
-            GameObject gameObject;
 
             if (assetNames.Length > 0)
             {
-                gameObject = bundle.LoadAsset<GameObject>(assetNames[0]);
+                GameObject gameObject = Instantiate(bundle.LoadAsset<GameObject>(assetNames[0]));
 
                 HandleLoadedObject(gameObject, fileLink);
             }
@@ -350,7 +434,7 @@ public class DataManager : MonoBehaviour
 
         RuntimeManager.Instance.UI_MANAGER.ConfigLayer.UISystemMessage($"{ObjPath.Length}, {extractPath}");   
 
-
+        /*
         if(ObjPath.Length > 0)
         {
             try
@@ -363,6 +447,8 @@ public class DataManager : MonoBehaviour
                 RuntimeManager.Instance.UI_MANAGER.ConfigLayer.UISystemMessage($"[Error]: {e.Message}");
             }
         }
+        */
+
 
         if(PlyPath.Length > 0)
         {

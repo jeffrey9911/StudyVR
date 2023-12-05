@@ -12,6 +12,14 @@ public class MeshSequenceLoader : MonoBehaviour
 {
     private MeshSequenceContainer meshSequenceContainer;
 
+    public string ManualSequenceName = "";
+
+    [ContextMenu("Load Sequence Manually")]
+    public void LoadSequenceManually()
+    {
+        LoadMeshSequence(ManualSequenceName);
+    }
+
 
     [ContextMenu("Load Mesh Sequence")]
     public void LoadMeshSequence(string SequenceName, Action<GameObject> OnLoad = null)

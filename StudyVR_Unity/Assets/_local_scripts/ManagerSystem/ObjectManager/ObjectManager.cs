@@ -59,21 +59,13 @@ public class ObjectManager : MonoBehaviour
 
     private void PlayAnimation(GameObject gameObject, Vector3 pivotPos)
     {
-        if (gameObject.TryGetComponent<MeshSequenceStreamerPlayer>(out MeshSequenceStreamerPlayer meshSequenceStreamerPlayer))
+        if (gameObject.TryGetComponent<MeshSequencePlayer>(out MeshSequencePlayer meshSequencePlayer))
         {
-            Bounds bounds = gameObject.GetComponent<MeshRenderer>().bounds;
-            gameObject.transform.position = new Vector3
-            (
-                pivotPos.x,
-                pivotPos.y - bounds.min.y,
-                pivotPos.z
-            );
-
-            //gameObject.transform.rotation = Quaternion.Euler(0, 180, 0);
-
             gameObject.SetActive(true);
-            meshSequenceStreamerPlayer.Stop();
-            meshSequenceStreamerPlayer.Play();
+
+            meshSequencePlayer.GroundMesh(pivotPos);
+
+            meshSequencePlayer.isPlaying = true;
         }
 
         if(gameObject.TryGetComponent<GeometrySequencePlayer>(out GeometrySequencePlayer geometrySequencePlayer))
@@ -101,7 +93,6 @@ public class ObjectManager : MonoBehaviour
             }
         }
     }
-
 
 
     bool PosGroundObject(GameObject gobj, Vector3 pivotPos)

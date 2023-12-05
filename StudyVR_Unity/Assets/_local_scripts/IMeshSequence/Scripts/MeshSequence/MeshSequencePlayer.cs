@@ -113,30 +113,41 @@ public class MeshSequencePlayer : MonoBehaviour
 
     private void SwapFrame(bool isReversing = false)
     {
-        int NextFrame = 0;
+        meshFilter.mesh = meshSequenceContainer.MeshSequence[CurrentFrame];
+
+        meshRenderer.sharedMaterial = meshSequenceContainer.MaterialSequence[CurrentFrame];
+
         if (isReversing)
         {
-            NextFrame = (CurrentFrame - 1) < 0 ? FrameCount - 1 : CurrentFrame - 1;
+            CurrentFrame = (CurrentFrame - 1) < 0 ? FrameCount - 1 : CurrentFrame - 1;
         }
         else
         {
-            NextFrame = (CurrentFrame + 1) >= FrameCount ? 0 : CurrentFrame + 1;
+            CurrentFrame = (CurrentFrame + 1) >= FrameCount ? 0 : CurrentFrame + 1;
         }
-
-        meshFilter.mesh = meshSequenceContainer.MeshSequence[NextFrame];
-
-        meshRenderer.sharedMaterial = meshSequenceContainer.MaterialSequence[NextFrame];
-        
-        CurrentFrame = NextFrame;
     }
 
-    [ContextMenu("Apply Player Transform Offset")]
-    public void ApplyOffset()
+    public void GroundMesh(Vector3 pivotPos)
     {
-        PositionOffset = this.transform.position;
-        RotationOffset = this.transform.eulerAngles;
-        ScaleOffset = this.transform.localScale;
+        CurrentFrame = 0;
+        SwapFrame();
 
-        Debug.Log("Offset Applied");
+        if(this.TryGetComponent<MeshFilter>(out MeshFilter msh))
+        {
+            Bounds bounds = msh.mesh.bounds;
+
+            if (bounds == null) return;
+
+            if (bounds.min.y - bounds.max.y == 0) return;
+
+            this.transform.position = new Vector3
+                (
+                    pivotPos.x,
+                    pivotPos.y - bounds.min.y,
+                    pivotPos.z
+                );
+        }
+
+        CurrentFrame = 0;
     }
 }

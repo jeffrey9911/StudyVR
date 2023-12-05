@@ -11,7 +11,7 @@ public class MeshSequenceStreamerGizmo : EditorWindow
     [MenuItem("Assets/IAirtable/Create or Rebuild All Asset Bundles")]
     private static void GenerateAssetBundle()
     {
-        string BuildPath = Application.dataPath + "/GeneratedAssetBundles";
+        string BuildPath = "C:/Users/jeffr/Desktop";
 
         try
         {
@@ -31,50 +31,68 @@ public class MeshSequenceStreamerGizmo : EditorWindow
     public static void ShowWindow()
     {
         MeshSequenceStreamerGizmo window = GetWindow<MeshSequenceStreamerGizmo>("IMeshSequence Gizmo");
-        window.minSize = new Vector2(500, 200);
+        window.minSize = new Vector2(400, 200);
+        window.maxSize = new Vector2(400, 200);
+        AssetDatabase.RemoveUnusedAssetBundleNames();
     }
 
     string SequencePath = "";
     string ExportPath = "";
     string SequenceName = "";
 
-    float progressBarPercent = 0;
-    string progressBarText = "";
+
+    
 
     private void OnGUI()
     {
-        GUILayout.Space(20);
+        GUIStyle CustomButtonStyle = new GUIStyle(GUI.skin.button);
+        CustomButtonStyle.fixedHeight = 30;
+        CustomButtonStyle.fixedWidth = 200;
+        CustomButtonStyle.fontSize = 10;
+        CustomButtonStyle.fontStyle = FontStyle.Bold;
+
+        GUILayout.Space(10);
 
         SequencePath = EditorGUILayout.TextField("Sequence Path", SequencePath);
 
-        if (GUILayout.Button("Load Sequence Folder Path"))
+        if (GUILayout.Button("Select Sequence Folder", CustomButtonStyle))
         {
             string path = EditorUtility.OpenFolderPanel("Open a folder that contains a Geometry Sequence (.obj)", SequencePath, "");
             SequencePath = path;
         }
 
-        GUILayout.Space(20);
+        GUILayout.Space(10);
 
         ExportPath = EditorGUILayout.TextField("Export Path", ExportPath);
 
-        if (GUILayout.Button("Export Sequence Folder Path"))
+        if (GUILayout.Button("Select Export Folder", CustomButtonStyle))
         {
             string path = EditorUtility.OpenFolderPanel("Open a folder that the asset bundle will be exported", ExportPath, "");
             ExportPath = path;
         }
 
-        GUILayout.Space(20);
 
-        if (GUILayout.Button("Create MeshSequence Bundle"))
+        GUILayout.Space(30);
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+
+        if (GUILayout.Button("Create MeshSequence Bundle", CustomButtonStyle))
         {
-            AssetDatabase.RemoveUnusedAssetBundleNames();
-            AssetDatabase.Refresh();
-            LoadObjects(SequencePath, ExportAssetBundle);
+            if(Directory.Exists(ExportPath) && Directory.Exists(SequencePath))
+            {
+                AssetDatabase.Refresh();
+                LoadObjects(SequencePath, ExportAssetBundle);
+            }
+            else
+            {
+                Debug.LogError("Folder paths not correct!");
+            }
+
+            
         }
 
-        GUILayout.Space(20);
-
-        EditorGUI.ProgressBar(new Rect(3, position.height - 20, position.width - 6, 20), progressBarPercent, progressBarText);
+        GUILayout.FlexibleSpace(); // Space to the right of the button
+        GUILayout.EndHorizontal();
     }
 
     
@@ -99,7 +117,7 @@ public class MeshSequenceStreamerGizmo : EditorWindow
         AssetBundleBuild build = new AssetBundleBuild
         {
             assetNames = new string[] { AssetDatabase.GetAssetPath(prefab) },
-            assetBundleName = $"iMS_{SequenceName}"
+            assetBundleName = $"iMS_{SequenceName}.uab"
         };
 
         ExportPath += $"/{SequenceName}";
