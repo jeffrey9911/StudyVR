@@ -142,7 +142,7 @@ public class DataManager : MonoBehaviour
 
             case 1:
                 //StartCoroutine(GetAssetBundleFromGoogleDrive(PendingLink2, PreloadCallback, PreloadProgressCallback));
-                StartCoroutine(GetDataFromGoogleDrive(PendingLink1, PreloadProgressCallback));
+                StartCoroutine(GetDataFromGoogleDrive(PendingLink2, PreloadProgressCallback));
                 break;
 
             default:
@@ -247,7 +247,7 @@ public class DataManager : MonoBehaviour
     
     private IEnumerator GetDataFromGoogleDrive(string fileLink, Action<float> progressCallback = null)
     {
-        Debug.Log("GetDataFromGoogleDrive");
+        Debug.Log(fileLink);
         string fileID = ExtractFileIdFromGoogleDriveLink(fileLink);
         if(string.IsNullOrEmpty(fileID))
         {
@@ -268,7 +268,6 @@ public class DataManager : MonoBehaviour
 
         if(metaRequest.result == UnityWebRequest.Result.Success)
         {
-            Debug.Log("Success");
             string url = $"https://www.googleapis.com/drive/v3/files/{fileID}?alt=media&key={RuntimeManager.Instance.STUDYVR_IAIRTABLE.GoogleAPIKey}";
 
             switch (Path.GetExtension(JsonUtility.FromJson<FileMetadata>(metaRequest.downloadHandler.text).name))
