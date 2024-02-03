@@ -285,8 +285,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1fbf7671cd605b44eb4909dad8874766, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  AIRTABLE_API_KEY: pat37GAOTtKkSPfb4.6dd1815f2179789ecbad415fb24a2de77be2a7fea05256a325db2684d50f3b98
-  GOOGLE_API_KEY: AIzaSyBDKVSZXmLkRqQo9dMlqUfBagL349TNHFQ
+  AIRTABLE_API_KEY: 
+  GOOGLE_API_KEY: 
   InitializeOnStart: 1
   isReady: 1
 --- !u!4 &18720334
